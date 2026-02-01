@@ -1,0 +1,21 @@
+# 忽略所有模型权重文件
+*.ckpt
+*.pth
+*.pt
+*.onnx
+
+# 忽略日志、缓存和生成结果
+logs/
+wandb/
+results/
+__pycache__/
+*.log
+
+# 忽略数据集（如果有）
+datasets/
+data/
+
+# 忽略环境配置
+venv/
+.idea/
+.vscode/
