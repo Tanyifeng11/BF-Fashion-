@@ -127,7 +127,7 @@ def generate_images(sketch_img_name, texture_img_name, scale_1, scale_2, ddim_st
 
 if __name__ == "__main__":
     config = OmegaConf.load("configs/latent-diffusion/mydata_ldm-vq-f8_test.yaml")  # TODO: Optionally download from same location as ckpt and chnage this logic
-    ckpt_path = "last.ckpt"
+    ckpt_path = "models/first_stage_models/vq-f8/model.ckpt"
     
     sampler = load_neural_network()
     classnames = ["bag","top","outwear","pants","dress"]

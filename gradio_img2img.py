@@ -12,7 +12,7 @@ config = OmegaConf.load(r"configs\latent-diffusion\mydata_ldm-vq-f8_test.yaml")
 
 def parse_args():
     parser=argparse.ArgumentParser(description="Gradio Interface for Image to Image")
-    parser.add_argument("--dataset", type=str, help="Dataset path", default=r"d:\fuxian\datasets\BF\test\outwear")
+    parser.add_argument("--dataset", type=str, help="Dataset path", default=r"D:\tyf\fuxian\datasets\BF\test\outwear")
     return parser.parse_args()
 
 args=parse_args()

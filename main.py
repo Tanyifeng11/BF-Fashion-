@@ -251,7 +251,7 @@ class SetupCallback(Callback):
     def on_keyboard_interrupt(self, trainer, pl_module):
         if trainer.global_rank == 0:
             print("Summoning checkpoint.")
-            ckpt_path = os.path.join(self.ckptdir, "last.ckpt")
+            ckpt_path = os.path.join(self.ckptdir, "model.ckpt")
             trainer.save_checkpoint(ckpt_path)
 
     def on_pretrain_routine_start(self, trainer, pl_module):
@@ -517,7 +517,7 @@ if __name__ == "__main__":
         else:
             assert os.path.isdir(opt.resume), opt.resume
             logdir = opt.resume.rstrip("/")
-            ckpt = os.path.join(logdir, "checkpoints", "last.ckpt")
+            ckpt = os.path.join(logdir, "checkpoints", "model.ckpt")
 
         opt.resume_from_checkpoint = ckpt
         base_configs = sorted(glob.glob(os.path.join(logdir, "configs/*.yaml")))
@@ -738,7 +738,7 @@ if __name__ == "__main__":
             # run all checkpoint hooks
             if trainer.global_rank == 0:
                 print("Summoning checkpoint.")
-                ckpt_path = os.path.join(ckptdir, "last.ckpt")
+                ckpt_path = os.path.join(ckptdir, "model.ckpt")
                 trainer.save_checkpoint(ckpt_path)
 
 

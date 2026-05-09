@@ -53,7 +53,7 @@ model:
     first_stage_config:
       target: ldm.models.autoencoder.VQModelInterface
       params:
-        ckpt_path: d:/fuxian/BF-Fashion-master/models/first_stage_models/vq-f8/model.ckpt
+        ckpt_path: D:/tyf/fuxian/BF-Fashion-master/models/first_stage_models/vq-f8/model.ckpt
         embed_dim: 4
         n_embed: 16384
         ddconfig:

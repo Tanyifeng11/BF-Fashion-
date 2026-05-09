@@ -1,7 +1,7 @@
 import os
 
 # 你的数据集根目录
-dataset_root = r"D:\fuxian\datasets\BF"
+dataset_root = r"D:\tyf\fuxian\datasets\BF"
 # 需要检查的子数据集
 sub_datasets = ["training", "validation"]
 # 需要对齐的三个模态文件夹
