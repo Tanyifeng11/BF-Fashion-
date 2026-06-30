@@ -102,6 +102,8 @@ data:
 lightning:
   trainer:
     benchmark: True
+    gpus: "0,1,2,3"
+    accelerator: ddp
     accumulate_grad_batches: 6
     max_epochs: 26
     choose_logger: wandb
