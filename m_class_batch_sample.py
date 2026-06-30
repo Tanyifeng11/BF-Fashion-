@@ -10,9 +10,14 @@ from tqdm import tqdm
 import os
 import logging
 
-import os 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 #---------------------------------------------------------------------------------------------------------
+PROJECT_DIR = "/share/home/u2515283058/BF-Fashion-"
+DATASET_TEST_DIR = "/share/home/u2515283058/datasets/BF/test"
+EVAL_OUTPUT_DIR = os.path.join(PROJECT_DIR, "eval_output")
+EVAL_TEST_DIR = os.path.join(EVAL_OUTPUT_DIR, "test")
+DEFAULT_CLASSES = ["bag", "top", "outwear", "pants", "dress"]
+os.makedirs(EVAL_OUTPUT_DIR, exist_ok=True)
+
 class TqdmLoggingHandler(logging.Handler):
     def __init__(self, log_file):
         super().__init__()
@@ -26,12 +31,21 @@ class TqdmLoggingHandler(logging.Handler):
         with open(self.log_file, 'a') as f:
             f.write(log_entry + '\n')
 
-log_file = 'tqdm_progress.log'
+log_file = os.path.join(EVAL_OUTPUT_DIR, 'tqdm_progress.log')
 logger = logging.getLogger('tqdm_logger')
 logger.setLevel(logging.INFO)
 logger.addHandler(TqdmLoggingHandler(log_file))
 
 #---------------------------------------------------------------------------------------------------------
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--classes", nargs="+", default=DEFAULT_CLASSES)
+    parser.add_argument("--ckpt", default="last.ckpt")
+    parser.add_argument("--ddim-steps", type=int, default=200)
+    parser.add_argument("--eval-output", default=EVAL_OUTPUT_DIR)
+    return parser.parse_args()
 
 def load_model_from_config(config, ckpt, verbose=False):
     print(f"Loading model from {ckpt}")
@@ -133,23 +147,24 @@ def get_target_folder(sample_dataset_path):
     return os.path.join(sample_dataset_path, "cloth")
 
 if __name__ == "__main__":
+    args = parse_args()
     config = OmegaConf.load("configs/latent-diffusion/mydata_ldm-vq-f8_test.yaml")  # TODO: Optionally download from same location as ckpt and chnage this logic
-    ckpt_path = "last.ckpt"
+    ckpt_path = args.ckpt
     
     sampler = load_neural_network()
-    classnames = ["bag","top","outwear","pants","dress"]
+    classnames = args.classes
     for classname in classnames:
         print("===============================Sampling in progress: {} Classification===============================".format(classname))
-        sample_dataset_path = os.path.join("/share/home/u2515283058/datasets/BF/test", classname)
+        sample_dataset_path = os.path.join(DATASET_TEST_DIR, classname)
         target_folder = get_target_folder(sample_dataset_path)
         
-        generated_images_folder = os.path.join(sample_dataset_path, "gen")
+        generated_images_folder = os.path.join(args.eval_output, "test", classname, "gen")
         if not os.path.exists(generated_images_folder):
             os.makedirs(generated_images_folder)
             
-        for filename in tqdm(os.listdir(target_folder), file=open(log_file, 'a')):
+        for filename in tqdm(sorted(os.listdir(target_folder)), file=open(log_file, 'a')):
             gen = generate_images(filename,filename,
                             config["model"]["params"]["scale_1"],
                             config["model"]["params"]["scale_2"],
-                            ddim_steps=200)
+                            ddim_steps=args.ddim_steps)
             save_image(gen, os.path.join(generated_images_folder, filename))

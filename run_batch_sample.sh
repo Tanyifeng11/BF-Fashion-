@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-LOG_FILE="sample.log"
+mkdir -p eval_output
+LOG_FILE="eval_output/sample.log"
 
 echo "Starting batch sampling..."
 nohup python -u m_class_batch_sample.py > "$LOG_FILE" 2>&1 &

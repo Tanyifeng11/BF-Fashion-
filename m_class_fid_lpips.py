@@ -1,4 +1,5 @@
 from pytorch_fid import fid_score
+import argparse
 import lpips
 import os
 from PIL import Image
@@ -8,6 +9,29 @@ import torchvision.transforms as transforms
 transform = transforms.Compose([
     transforms.ToTensor(),
 ])
+
+PROJECT_DIR = "/share/home/u2515283058/BF-Fashion-"
+BASE_PATH = "/share/home/u2515283058/datasets/BF/test"
+EVAL_OUTPUT_DIR = os.path.join(PROJECT_DIR, "eval_output")
+GENERATED_BASE_PATH = os.path.join(EVAL_OUTPUT_DIR, "test")
+OUTPUT_FILE = os.path.join(EVAL_OUTPUT_DIR, "m_class_fid_lpips.txt")
+DEFAULT_CLASSES = ["bag", "top", "outwear", "pants", "dress"]
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--classes", nargs="+", default=DEFAULT_CLASSES)
+    parser.add_argument("--output-file", default=OUTPUT_FILE)
+    return parser.parse_args()
+
+
+def get_target_folder(class_folder):
+    gt_folder = os.path.join(class_folder, "gt")
+    if os.path.isdir(gt_folder):
+        return gt_folder
+    return os.path.join(class_folder, "cloth")
+
+
 def compute_fid(real_images_folder,generated_images_folder,results):
     print("computing fid...")
     fid_value = fid_score.calculate_fid_given_paths([real_images_folder, generated_images_folder],
@@ -37,13 +61,21 @@ def compute_lpips(real_images_folder,generated_images_folder,results):
     results["lpips_alex_avg"] = lpips_alex_avg
 
 if __name__ == "__main__":
-    if os.path.exists('m_class_fid_lpips.txt'):
-        os.remove('m_class_fid_lpips.txt')
-    classnames = ["bag","top","outwear","pants","dress"]
+    args = parse_args()
+    os.makedirs(EVAL_OUTPUT_DIR, exist_ok=True)
+    classnames = args.classes
+    if args.output_file == OUTPUT_FILE and len(classnames) == 1:
+        args.output_file = os.path.join(EVAL_OUTPUT_DIR, "metrics", f"fid_lpips_{classnames[0]}.txt")
+    output_dir = os.path.dirname(args.output_file)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+    if os.path.exists(args.output_file):
+        os.remove(args.output_file)
     # classnames = ["dress"]
     for classname in classnames:
-        real_images_folder = r'datasets/test/{}/gt'.format(classname)
-        generated_images_folder = r'datasets/BF/test/{}/gen'.format(classname)
+        class_folder = os.path.join(BASE_PATH, classname)
+        real_images_folder = get_target_folder(class_folder)
+        generated_images_folder = os.path.join(GENERATED_BASE_PATH, classname, "gen")
         results = {}
         thread1 = threading.Thread(target=compute_fid, args=(real_images_folder,generated_images_folder,results))
         thread2 = threading.Thread(target=compute_lpips, args=(real_images_folder,generated_images_folder,results))
@@ -54,8 +86,5 @@ if __name__ == "__main__":
         data = [results["fid"],results["lpips_alex_avg"]]
 
         # 打开文件并追加写入数据
-        with open('m_class_fid_lpips.txt', 'a') as file:
-            if classname != classnames[-1]:
-                file.write(','.join(map(str, data)) + ',')
-            else:
-                file.write(','.join(map(str, data)))
+        with open(args.output_file, 'a') as file:
+            file.write(','.join(map(str, [classname] + data)) + '\n')

@@ -244,22 +244,41 @@ def image_loader(image_name):
     return image.to(device, torch.float)
 
 if __name__ == '__main__':
+    import argparse
     import os
     from tqdm import tqdm
-    output_file = 'm_class_histo_loss.txt'
+    default_classes = ["bag", "top", "outwear", "pants", "dress"]
+    project_dir = "/share/home/u2515283058/BF-Fashion-"
+    eval_output_dir = os.path.join(project_dir, "eval_output")
+    default_output_file = os.path.join(eval_output_dir, 'm_class_histo_loss.txt')
 
-    if os.path.exists(output_file):
-        os.remove(output_file)
-    classnames = ["bag","top","outwear","pants","dress"]
-    base_path = "datasets/test"
-    path1 = "gen"
-    path2 = "gt"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--classes", nargs="+", default=default_classes)
+    parser.add_argument("--output-file", default=default_output_file)
+    args = parser.parse_args()
+
+    os.makedirs(eval_output_dir, exist_ok=True)
+    classnames = args.classes
+    if args.output_file == default_output_file and len(classnames) == 1:
+        args.output_file = os.path.join(eval_output_dir, "metrics", f"histo_{classnames[0]}.txt")
+    output_dir = os.path.dirname(args.output_file)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+    if os.path.exists(args.output_file):
+        os.remove(args.output_file)
+    base_path = "/share/home/u2515283058/datasets/BF/test"
+    generated_base_path = os.path.join(eval_output_dir, "test")
     for classname in classnames:
         print(f"Calculating color similarity for {classname}...")
         histogram_loss_total = 0.0
-        for filename in tqdm(os.listdir(os.path.join(base_path,classname,path1))):
-            img1 = os.path.join(base_path,classname,path1,filename)
-            img2 = os.path.join(base_path,classname,path2,filename)
+        class_folder = os.path.join(base_path, classname)
+        generated_folder = os.path.join(generated_base_path, classname, "gen")
+        target_folder = os.path.join(class_folder, "gt")
+        if not os.path.isdir(target_folder):
+            target_folder = os.path.join(class_folder, "cloth")
+        for filename in tqdm(os.listdir(generated_folder)):
+            img1 = os.path.join(generated_folder,filename)
+            img2 = os.path.join(target_folder,filename)
 
             # -------------------------------------------------------------------
             # read images
@@ -293,8 +312,8 @@ if __name__ == '__main__':
             
             histogram_loss_total += histogram_loss
             # -------------------------------------------------------------------
-        histogram_loss_avg = format(histogram_loss_total / len(os.listdir(os.path.join(base_path,classname,path1))),".3f")
-        with open(output_file, 'a') as f:
+        histogram_loss_avg = format(histogram_loss_total / len(os.listdir(generated_folder)),".3f")
+        with open(args.output_file, 'a') as f:
             f.write(f"{classname}: {histogram_loss_avg}\n")
 
 
