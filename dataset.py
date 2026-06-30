@@ -9,7 +9,7 @@ class MyDataSetTrain(Dataset):
     def __init__(self, size, path):
         super().__init__()
         # 使用 os.path.join 确保路径兼容 Windows
-        gt_path = os.path.join(path, "training", "gt")
+        gt_path = os.path.join(path, "training", "cloth")
         sketch_path = os.path.join(path, "training", "sketch")
         texture_path = os.path.join(path, "training", "texture")
 

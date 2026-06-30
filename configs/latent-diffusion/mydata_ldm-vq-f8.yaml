@@ -53,7 +53,7 @@ model:
     first_stage_config:
       target: ldm.models.autoencoder.VQModelInterface
       params:
-        ckpt_path: D:/fuxian/BF-Fashion-master/models/first_stage_models/vq-f8/model.ckpt
+        ckpt_path: /share/home/u2515283058/BF-Fashion-/models/first_stage_models/vq-f8/model.ckpt
         embed_dim: 4
         n_embed: 16384
         ddconfig:
@@ -91,12 +91,12 @@ data:
       target: dataset.MyDataSetTrain
       params:
         size: 256
-        path: D:\fuxian\datasets\BF
+        path: /share/home/u2515283058/datasets/BF
     validation:
       target: dataset.MyDataSetValidation
       params:
         size: 256
-        path: D:\fuxian\datasets\BF
+        path: /share/home/u2515283058/datasets/BF
 
 
 lightning:

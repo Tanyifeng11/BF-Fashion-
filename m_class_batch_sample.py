@@ -125,21 +125,29 @@ def generate_images(sketch_img_name, texture_img_name, scale_1, scale_2, ddim_st
 
     return predictions
 
+
+def get_target_folder(sample_dataset_path):
+    gt_folder = os.path.join(sample_dataset_path, "gt")
+    if os.path.isdir(gt_folder):
+        return gt_folder
+    return os.path.join(sample_dataset_path, "cloth")
+
 if __name__ == "__main__":
     config = OmegaConf.load("configs/latent-diffusion/mydata_ldm-vq-f8_test.yaml")  # TODO: Optionally download from same location as ckpt and chnage this logic
-    ckpt_path = "models/first_stage_models/vq-f8/model.ckpt"
+    ckpt_path = "last.ckpt"
     
     sampler = load_neural_network()
     classnames = ["bag","top","outwear","pants","dress"]
     for classname in classnames:
         print("===============================Sampling in progress: {} Classification===============================".format(classname))
-        sample_dataset_path = os.path.join("datasets/test",classname)
+        sample_dataset_path = os.path.join("/share/home/u2515283058/datasets/BF/test", classname)
+        target_folder = get_target_folder(sample_dataset_path)
         
-        generated_images_folder =  os.path.join("datasets/test",classname,"gen")
+        generated_images_folder = os.path.join(sample_dataset_path, "gen")
         if not os.path.exists(generated_images_folder):
             os.makedirs(generated_images_folder)
             
-        for filename in tqdm(os.listdir(os.path.join(sample_dataset_path, "gt")), file=open(log_file, 'a')):
+        for filename in tqdm(os.listdir(target_folder), file=open(log_file, 'a')):
             gen = generate_images(filename,filename,
                             config["model"]["params"]["scale_1"],
                             config["model"]["params"]["scale_2"],

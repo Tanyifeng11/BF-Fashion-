@@ -1,14 +1,17 @@
 import os
 
 # 你的数据集根目录
-dataset_root = r"D:\tyf\fuxian\datasets\BF"
+dataset_root = "/share/home/u2515283058/datasets/BF"
 # 需要检查的子数据集
-sub_datasets = ["training", "validation"]
+split_modalities = {
+    "training": ["cloth", "sketch", "texture"],
+    "validation": ["gt", "sketch", "texture"],
+}
 # 需要对齐的三个模态文件夹
-modalities = ["gt", "sketch", "texture"]
 
 
 def clean_folder(sub_name):
+    modalities = split_modalities[sub_name]
     base_path = os.path.join(dataset_root, sub_name)
     if not os.path.exists(base_path):
         print(f"跳过: 找不到文件夹 {base_path}")
@@ -62,7 +65,7 @@ def clean_folder(sub_name):
 
 
 # 执行清理
-for sub in sub_datasets:
+for sub in split_modalities:
     clean_folder(sub)
 
 print("所有清理工作完成！")

@@ -8,14 +8,21 @@ import gradio as gr
 from ldm.util import instantiate_from_config
 from ldm.models.diffusion.ddim import DDIMSampler
 
-config = OmegaConf.load(r"configs\latent-diffusion\mydata_ldm-vq-f8_test.yaml")
+config = OmegaConf.load("configs/latent-diffusion/mydata_ldm-vq-f8_test.yaml")
 
 def parse_args():
     parser=argparse.ArgumentParser(description="Gradio Interface for Image to Image")
-    parser.add_argument("--dataset", type=str, help="Dataset path", default=r"D:\tyf\fuxian\datasets\BF\test\outwear")
+    parser.add_argument("--dataset", type=str, help="Dataset path", default="/share/home/u2515283058/datasets/BF/test/outwear")
     return parser.parse_args()
 
 args=parse_args()
+
+
+def get_target_folder(dataset_path):
+    gt_folder = os.path.join(dataset_path, "gt")
+    if os.path.isdir(gt_folder):
+        return gt_folder
+    return os.path.join(dataset_path, "cloth")
 
 def load_model_from_config(config, ckpt, verbose=False):
     print(f"Loading model from {ckpt}")
@@ -103,7 +110,7 @@ def generate_images(sketch_img_name, texture_img_name, scale_1, scale_2, ddim_st
     
     sketch_img_path = os.path.join(args.dataset, "sketch/", sketch_img_name)
     texture_img_path = os.path.join(args.dataset, "texture/", texture_img_name)
-    gt_img_path = os.path.join(args.dataset, "gt/", sketch_img_name.split(".")[0] + ".jpg")
+    gt_img_path = os.path.join(get_target_folder(args.dataset), sketch_img_name.split(".")[0] + ".jpg")
 
 
     sketch_img = transform_img(Image.open(sketch_img_path)).cuda()
@@ -146,4 +153,4 @@ if __name__ == "__main__":
     sampler = load_neural_network()
 
     # Launch the Gradio interface
-    iface.launch(server_name="127.0.0.1")
+    iface.launch(server_name="0.0.0.0")
