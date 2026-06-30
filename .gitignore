@@ -13,7 +13,7 @@ __pycache__/
 
 # 忽略数据集（如果有）
 datasets/
-data/
+/data/
 
 # 忽略环境配置
 venv/
