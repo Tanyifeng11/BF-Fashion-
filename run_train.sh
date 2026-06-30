@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
 LOG_FILE="train.log"
 
-echo "Starting training..."
-nohup python -u main.py > "$LOG_FILE" 2>&1 &
-PID=$!
-
-echo "Training started. PID: $PID"
+echo "Starting training in foreground..."
 echo "Log file: $LOG_FILE"
-echo "View log: tail -f $LOG_FILE"
+echo "Stop training: Ctrl+C"
+
+python -u main.py 2>&1 | tee "$LOG_FILE"
