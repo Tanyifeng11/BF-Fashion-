@@ -1,4 +1,5 @@
 import os
+import json
 import numpy as np
 from torch.utils.data import Dataset
 import torch
@@ -58,6 +59,43 @@ class MyDataSetTrain(Dataset):
         sketch_image = Image.open(self.sketch_images[i]).convert("L")  # 线稿通常是灰度图，或者保持RGB
         sketch_image = np.array(sketch_image).astype(np.uint8)
         # 如果线稿是单通道，可能需要 unsqueeze，视模型输入要求而定，这里保持原样
+        sketch_image = (sketch_image / 127.5 - 1.0).astype(np.float32)
+
+        texture_image = Image.open(self.texture_images[i]).convert("RGB")
+        texture_image = np.array(texture_image).astype(np.uint8)
+        texture_image = (texture_image / 127.5 - 1.0).astype(np.float32)
+
+        return {
+            "gt": gt_image,
+            "sketch": sketch_image,
+            "texture": texture_image
+        }
+
+
+class MyDataSetTrain(Dataset):
+    def __init__(self, size, path, metadata_path=None):
+        super().__init__()
+        if metadata_path is None:
+            metadata_path = os.path.join(path, "training", "train_bf_texture.json")
+
+        with open(metadata_path, "r", encoding="utf-8") as f:
+            items = json.load(f)
+
+        base_path = os.path.join(path, "training")
+        self.gt_images = [os.path.join(base_path, item["cloth"]) for item in items]
+        self.sketch_images = [os.path.join(base_path, item["sketch"]) for item in items]
+        self.texture_images = [os.path.join(base_path, item["texture"]) for item in items]
+
+    def __len__(self):
+        return len(self.gt_images)
+
+    def __getitem__(self, i):
+        gt_image = Image.open(self.gt_images[i]).convert("RGB")
+        gt_image = np.array(gt_image).astype(np.uint8)
+        gt_image = (gt_image / 127.5 - 1.0).astype(np.float32)
+
+        sketch_image = Image.open(self.sketch_images[i]).convert("L")
+        sketch_image = np.array(sketch_image).astype(np.uint8)
         sketch_image = (sketch_image / 127.5 - 1.0).astype(np.float32)
 
         texture_image = Image.open(self.texture_images[i]).convert("RGB")

@@ -92,6 +92,7 @@ data:
       params:
         size: 256
         path: /share/home/u2515283058/datasets/BF
+        metadata_path: /share/home/u2515283058/Mymodel/data/train_bf_texture.json
     validation:
       target: dataset.MyDataSetValidation
       params:
