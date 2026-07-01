@@ -468,7 +468,7 @@ if __name__ == "__main__":
     
     # parser = Trainer.add_argparse_args(parser)
     # opt, unknown = parser.parse_known_args()
-    opt = argparse.Namespace(accelerator=None, accumulate_grad_batches=1, 
+    opt = argparse.Namespace(accelerator='ddp', accumulate_grad_batches=1, 
                              amp_backend='native', amp_level='O2', auto_lr_find=False, 
                              auto_scale_batch_size=False, auto_select_gpus=False, 
                              base=['configs/latent-diffusion/mydata_ldm-vq-f8.yaml'], 
@@ -476,7 +476,7 @@ if __name__ == "__main__":
                              checkpoint_callback=True, debug=False, 
                              default_root_dir=None, deterministic=False, devices=None, 
                              distributed_backend=None, fast_dev_run=False, 
-                             flush_logs_every_n_steps=100, gpus='0',
+                             flush_logs_every_n_steps=100, gpus='0,1,2,3',
                              gradient_clip_algorithm='norm', gradient_clip_val=0.0, 
                              ipus=None, limit_predict_batches=1.0, 
                              limit_test_batches=1.0, limit_train_batches=1.0, 
