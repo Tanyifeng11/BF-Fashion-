@@ -52,7 +52,16 @@ mkdir -p "$METRICS_DIR"
 echo "Training finished. Starting evaluation..." | tee -a "$EVAL_LOG"
 echo "Eval output dir: $EVAL_DIR" | tee -a "$EVAL_LOG"
 
-run_class_jobs "sample" python -u m_class_batch_sample.py --classes
+shopt -s nullglob
+CKPTS=(logs/*/checkpoints/last.ckpt)
+if [ "${#CKPTS[@]}" -eq 0 ]; then
+  echo "Error: no checkpoint found under logs/*/checkpoints/last.ckpt" | tee -a "$EVAL_LOG"
+  exit 1
+fi
+CKPT_PATH=$(ls -t "${CKPTS[@]}" | head -n 1)
+echo "Using checkpoint: $CKPT_PATH" | tee -a "$EVAL_LOG"
+
+run_class_jobs "sample" python -u m_class_batch_sample.py --ckpt "$CKPT_PATH" --classes
 
 run_class_jobs "fid_lpips" python -u m_class_fid_lpips.py --classes
 
