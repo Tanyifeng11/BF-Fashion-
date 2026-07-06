@@ -4,7 +4,6 @@ import lpips
 import os
 from PIL import Image
 from tqdm import tqdm 
-import threading
 import torchvision.transforms as transforms
 transform = transforms.Compose([
     transforms.ToTensor(),
@@ -77,12 +76,8 @@ if __name__ == "__main__":
         real_images_folder = get_target_folder(class_folder)
         generated_images_folder = os.path.join(GENERATED_BASE_PATH, classname, "gen")
         results = {}
-        thread1 = threading.Thread(target=compute_fid, args=(real_images_folder,generated_images_folder,results))
-        thread2 = threading.Thread(target=compute_lpips, args=(real_images_folder,generated_images_folder,results))
-        thread1.start()
-        thread2.start()
-        thread1.join()
-        thread2.join()
+        compute_fid(real_images_folder, generated_images_folder, results)
+        compute_lpips(real_images_folder, generated_images_folder, results)
         data = [results["fid"],results["lpips_alex_avg"]]
 
         # 打开文件并追加写入数据

@@ -70,8 +70,21 @@ run_class_jobs "histo" python -u m_class_histo_loss.py --classes
 : > "$EVAL_DIR/m_class_fid_lpips.txt"
 : > "$EVAL_DIR/m_class_histo_loss.txt"
 for classname in "${CLASSES[@]}"; do
-  cat "$METRICS_DIR/fid_lpips_${classname}.txt" >> "$EVAL_DIR/m_class_fid_lpips.txt"
-  cat "$METRICS_DIR/histo_${classname}.txt" >> "$EVAL_DIR/m_class_histo_loss.txt"
+  fid_file="$METRICS_DIR/fid_lpips_${classname}.txt"
+  histo_file="$METRICS_DIR/histo_${classname}.txt"
+
+  if [ ! -f "$fid_file" ]; then
+    echo "Error: missing $fid_file. Check fid_lpips stage in $EVAL_LOG" | tee -a "$EVAL_LOG"
+    exit 1
+  fi
+
+  if [ ! -f "$histo_file" ]; then
+    echo "Error: missing $histo_file. Check histo stage in $EVAL_LOG" | tee -a "$EVAL_LOG"
+    exit 1
+  fi
+
+  cat "$fid_file" >> "$EVAL_DIR/m_class_fid_lpips.txt"
+  cat "$histo_file" >> "$EVAL_DIR/m_class_histo_loss.txt"
 done
 
 echo "Evaluation finished." | tee -a "$EVAL_LOG"
