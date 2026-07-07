@@ -22,9 +22,10 @@ export https_proxy=http://211.67.63.75:3128
 PROJECT_ROOT="${PROJECT_ROOT:-/share/home/u2515283058/BF-Fashion-}"
 DATASET_TEST_DIR="${DATASET_TEST_DIR:-/share/home/u2515283058/datasets/BF/test}"
 EVAL_OUTPUT="${EVAL_OUTPUT:-${PROJECT_ROOT}/eval_output}"
-OUTPUT_DIR="${OUTPUT_DIR:-${EVAL_OUTPUT}/benchmark_500_metrics}"
+OUTPUT_DIR="${OUTPUT_DIR:-${EVAL_OUTPUT}/benchmark_500_no_bag_metrics}"
+CLASSES="${CLASSES:-top outwear pants dress}"
 NUM_SAMPLES="${NUM_SAMPLES:-500}"
-PER_CLASS_SAMPLES="${PER_CLASS_SAMPLES:-100}"
+PER_CLASS_SAMPLES="${PER_CLASS_SAMPLES:-125}"
 EVAL_SEED="${EVAL_SEED:-42}"
 REBUILD_SPLIT="${REBUILD_SPLIT:-0}"
 DEVICE="${DEVICE:-cuda:0}"
@@ -40,6 +41,7 @@ echo "PROJECT_ROOT=${PROJECT_ROOT}"
 echo "DATASET_TEST_DIR=${DATASET_TEST_DIR}"
 echo "EVAL_OUTPUT=${EVAL_OUTPUT}"
 echo "OUTPUT_DIR=${OUTPUT_DIR}"
+echo "CLASSES=${CLASSES}"
 echo "NUM_SAMPLES=${NUM_SAMPLES}"
 echo "PER_CLASS_SAMPLES=${PER_CLASS_SAMPLES}"
 echo "EVAL_SEED=${EVAL_SEED}"
@@ -49,6 +51,7 @@ echo "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-not_set}"
 echo "============================================"
 
 python -u bf_500_metrics.py \
+  --classes ${CLASSES} \
   --dataset-test-dir "${DATASET_TEST_DIR}" \
   --eval-output "${EVAL_OUTPUT}" \
   --output-dir "${OUTPUT_DIR}" \

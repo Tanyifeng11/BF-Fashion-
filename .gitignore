@@ -8,6 +8,7 @@
 logs/
 wandb/
 results/
+eval_output/
 __pycache__/
 *.log
 

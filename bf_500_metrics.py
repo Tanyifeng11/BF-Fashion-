@@ -34,7 +34,12 @@ def parse_args():
         default=os.path.join(EVAL_OUTPUT_DIR, "benchmark_500_metrics"),
     )
     parser.add_argument("--split-path", default=None)
-    parser.add_argument("--num-samples", type=int, default=500)
+    parser.add_argument(
+        "--num-samples",
+        type=int,
+        default=500,
+        help="Total sample cap. Use -1 to keep per-class samples without global truncation.",
+    )
     parser.add_argument("--per-class-samples", type=int, default=100)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--rebuild-split", type=int, choices=[0, 1], default=0)
@@ -94,7 +99,7 @@ def build_split(args):
         rng.shuffle(candidates)
         selected.extend(candidates[: args.per_class_samples])
 
-    if len(selected) < args.num_samples:
+    if args.num_samples > 0 and len(selected) < args.num_samples:
         selected_keys = {(row["class"], row["filename"]) for row in selected}
         remaining = [
             row
@@ -104,12 +109,15 @@ def build_split(args):
         rng.shuffle(remaining)
         selected.extend(remaining[: args.num_samples - len(selected)])
 
-    selected = selected[: args.num_samples]
+    if args.num_samples > 0:
+        selected = selected[: args.num_samples]
     selected.sort(key=lambda row: (row["class"], row["filename"]))
-    if len(selected) != args.num_samples:
+
+    expected = args.num_samples if args.num_samples > 0 else args.per_class_samples * len(args.classes)
+    if len(selected) != expected:
         raise RuntimeError(
             f"only found {len(selected)} paired generated/real images, "
-            f"expected {args.num_samples}"
+            f"expected {expected}"
         )
     return selected
 
