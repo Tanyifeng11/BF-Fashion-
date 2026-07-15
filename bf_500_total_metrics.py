@@ -3,7 +3,6 @@ import argparse
 import math
 import os
 import random
-import sys
 
 import numpy as np
 import torch
@@ -14,6 +13,8 @@ from tqdm import tqdm
 
 from ldm.models.diffusion.ddim import DDIMSampler
 from ldm.util import instantiate_from_config
+from bf_eval.benchmark_utils import create_or_load_fixed_split, write_csv, write_json
+from bf_eval.metrics import compute_clip_i_values, compute_fid_from_paths, evaluate_full
 
 
 PROJECT_ROOT = "/share/home/u2515283058/BF-Fashion-"
@@ -74,7 +75,6 @@ def parse_args():
     )
     parser.add_argument("--config", default="configs/latent-diffusion/mydata_ldm-vq-f8_test.yaml")
     parser.add_argument("--ckpt", default="last.ckpt")
-    parser.add_argument("--mymodel-root", default=MYMODEL_ROOT)
     parser.add_argument(
         "--dataset-json",
         default=os.path.join(MYMODEL_ROOT, "data", "train_bf_texture.json"),
@@ -106,21 +106,6 @@ def parse_args():
     parser.add_argument("--metrics-only", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args()
-
-
-def import_mymodel_evaluation(mymodel_root):
-    sys.path.insert(0, mymodel_root)
-    from eval.benchmark_utils import create_or_load_fixed_split, write_csv, write_json
-    from eval.metrics import compute_clip_i_values, compute_fid_from_paths, evaluate_full
-
-    return (
-        create_or_load_fixed_split,
-        write_csv,
-        write_json,
-        compute_clip_i_values,
-        compute_fid_from_paths,
-        evaluate_full,
-    )
 
 
 def resolve_path(data_root, value):
@@ -242,15 +227,6 @@ def main():
     os.makedirs(args.output_dir, exist_ok=True)
     generated_dir = os.path.join(args.output_dir, "generated")
     os.makedirs(generated_dir, exist_ok=True)
-
-    (
-        create_or_load_fixed_split,
-        write_csv,
-        write_json,
-        compute_clip_i_values,
-        compute_fid_from_paths,
-        evaluate_full,
-    ) = import_mymodel_evaluation(args.mymodel_root)
 
     split = create_or_load_fixed_split(
         args.dataset_json,

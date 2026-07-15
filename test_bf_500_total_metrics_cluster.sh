@@ -35,7 +35,7 @@ METRICS_ONLY="${METRICS_ONLY:-0}"
 OVERWRITE="${OVERWRITE:-0}"
 
 cd "${PROJECT_ROOT}"
-export PYTHONPATH="${PROJECT_ROOT}:${MYMODEL_ROOT}:${PYTHONPATH:-}"
+export PYTHONPATH="${PROJECT_ROOT}:${PYTHONPATH:-}"
 export HF_HUB_OFFLINE="${HF_HUB_OFFLINE:-1}"
 export TRANSFORMERS_OFFLINE="${TRANSFORMERS_OFFLINE:-1}"
 export TOKENIZERS_PARALLELISM="${TOKENIZERS_PARALLELISM:-false}"
@@ -56,7 +56,6 @@ cmd=(
   python -u bf_500_total_metrics.py
   --config "${CONFIG}"
   --ckpt "${CKPT}"
-  --mymodel-root "${MYMODEL_ROOT}"
   --dataset-json "${DATASET_JSON}"
   --data-root "${DATA_ROOT}"
   --split-path "${SPLIT_PATH}"
