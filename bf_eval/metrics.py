@@ -393,6 +393,15 @@ def _get_clip_model(device="cuda", model_name="openai/clip-vit-large-patch14"):
     return model.to(device), processor
 
 
+def clear_clip_model_cache():
+    global _clip_model_cache
+    for model, _ in _clip_model_cache.values():
+        model.to("cpu")
+    _clip_model_cache.clear()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+
 @torch.no_grad()
 def extract_clip_image_features(
     image_paths: List[str],

@@ -14,12 +14,18 @@ from tqdm import tqdm
 from ldm.models.diffusion.ddim import DDIMSampler
 from ldm.util import instantiate_from_config
 from bf_eval.benchmark_utils import create_or_load_fixed_split, write_csv, write_json
-from bf_eval.metrics import compute_clip_i_values, compute_fid_from_paths, evaluate_full
+from bf_eval.metrics import (
+    clear_clip_model_cache,
+    compute_clip_i_values,
+    compute_fid_from_paths,
+    evaluate_full,
+)
 
 
 PROJECT_ROOT = "/share/home/u2515283058/BF-Fashion-"
 MYMODEL_ROOT = "/share/home/u2515283058/Mymodel"
 DATA_ROOT = "/share/home/u2515283058/datasets/BF/training"
+DEFAULT_CLIP_MODEL = "openai/clip-vit-large-patch14"
 
 METRIC_FIELDS = [
     "ssim",
@@ -100,7 +106,7 @@ def parse_args():
     parser.add_argument("--clip-batch-size", type=int, default=16)
     parser.add_argument(
         "--clip-model-path",
-        default=os.path.join(MYMODEL_ROOT, "models", "clip"),
+        default=DEFAULT_CLIP_MODEL,
     )
     parser.add_argument("--min-valid-pixels", type=int, default=50)
     parser.add_argument("--metrics-only", action="store_true")
@@ -112,6 +118,31 @@ def resolve_path(data_root, value):
     if not value:
         return None
     return value if os.path.isabs(value) else os.path.join(data_root, value)
+
+
+def validate_clip_model(model_name):
+    if os.path.isabs(model_name) and not os.path.isdir(model_name):
+        raise FileNotFoundError(f"CLIP model directory does not exist: {model_name}")
+    if not os.path.isdir(model_name):
+        return
+
+    config_path = os.path.join(model_name, "config.json")
+    weight_names = {
+        "pytorch_model.bin",
+        "pytorch_model.bin.index.json",
+        "model.safetensors",
+        "model.safetensors.index.json",
+    }
+    has_weights = any(
+        filename in weight_names
+        for _, _, filenames in os.walk(model_name)
+        for filename in filenames
+    )
+    if not os.path.isfile(config_path) or not has_weights:
+        raise RuntimeError(
+            f"incomplete CLIP model directory: {model_name}; "
+            "config.json and model weights are required"
+        )
 
 
 def load_model(config, ckpt, device):
@@ -224,6 +255,7 @@ def format_summary(summary):
 
 def main():
     args = parse_args()
+    validate_clip_model(args.clip_model_path)
     os.makedirs(args.output_dir, exist_ok=True)
     generated_dir = os.path.join(args.output_dir, "generated")
     os.makedirs(generated_dir, exist_ok=True)
@@ -289,19 +321,6 @@ def main():
             f"generated images are incomplete: {len(rows) - len(missing)}/{len(rows)}"
         )
 
-    for row in tqdm(rows, desc="Per-image metrics"):
-        metrics = evaluate_full(
-            row["gen_path"],
-            target_path=row["target_path"],
-            texture_path=row["texture_path"],
-            sketch_path=row["sketch_path"],
-            mask_path=row["mask_path"],
-            compute_leakage=True,
-            compute_structure=True,
-            min_valid_pixels=args.min_valid_pixels,
-        )
-        row.update(metrics)
-
     gen_paths = [row["gen_path"] for row in rows]
     real_paths = [row["target_path"] for row in rows]
     texture_paths = [row["texture_path"] for row in rows]
@@ -325,6 +344,20 @@ def main():
     for row, real_value, texture_value in zip(rows, clip_real, clip_texture):
         row["clip_i_real"] = float(real_value)
         row["clip_i_texture"] = float(texture_value)
+    clear_clip_model_cache()
+
+    for row in tqdm(rows, desc="Per-image metrics"):
+        metrics = evaluate_full(
+            row["gen_path"],
+            target_path=row["target_path"],
+            texture_path=row["texture_path"],
+            sketch_path=row["sketch_path"],
+            mask_path=row["mask_path"],
+            compute_leakage=True,
+            compute_structure=True,
+            min_valid_pixels=args.min_valid_pixels,
+        )
+        row.update(metrics)
 
     print("Computing one global FID over all 500 images...")
     fid_value, fid_backend = compute_fid_from_paths(
