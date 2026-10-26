@@ -137,6 +137,15 @@ def generate(args):
      write(out/'BF_smoke_complete.json',dict(images=len(counts),checkpoint_sha256=auditinfo['checkpoint_sha256'],records=counts,new_training=0,formal_outputs_reused_by_full_run=True));return
  write(out/'BF_generation_complete.json',dict(images=len(counts),checkpoint_sha256=auditinfo['checkpoint_sha256'],records=counts,new_training=0));assert len(counts)==288
 
+def approve(args):
+ out=Path(args.out);a=read(out/'BF_checkpoint_audit.json')
+ assert a['checkpoint_sha256']==args.expected_checkpoint_sha256 and a['train_manifest_sha256']==args.expected_train_sha256
+ assert (a['epoch'],a['global_step'],a['train_count'])==(26,49166,45384) and not a['train_test_identity_overlap']
+ assert a['saved_training_metadata_path']==a['train_manifest_path'] and a['train_manifest_mtime_ns']<a['checkpoint_mtime_ns']
+ assert all(v['source']==v['runner'] for v in a['source_files_sha256'].values())
+ write(out/'BF_provenance_approval.json',dict(checkpoint_training_provenance_approved=True,checkpoint_sha256=a['checkpoint_sha256'],train_manifest_sha256=a['train_manifest_sha256'],evidence='checkpoint folder and saved project config identify the same training metadata; current manifest predates checkpoint;45384 identities checked,96 confirmation identities excluded; source network files match',limitation='No immutable manifest fingerprint saved at historical training time; current contents and timestamps support reconstruction, not proof of no pretraining exposure or a fresh blind test.',new_training=0))
+ print('BF_PROVENANCE_RECONSTRUCTION_ACCEPTED_WITH_DISCLOSED_LIMITS',flush=True)
+
 if __name__=='__main__':
- p=argparse.ArgumentParser();p.add_argument('action',choices=['prepare','audit','generate']);p.add_argument('--repo');p.add_argument('--source-repo');p.add_argument('--ckpt');p.add_argument('--vq');p.add_argument('--out',required=True);p.add_argument('--confirm-manifest');p.add_argument('--confirm-archive');p.add_argument('--archive-sha256');p.add_argument('--train-manifest');p.add_argument('--training-config');p.add_argument('--approval');p.add_argument('--limit',type=int,default=0);args=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('action',choices=['prepare','audit','approve','generate']);p.add_argument('--repo');p.add_argument('--source-repo');p.add_argument('--ckpt');p.add_argument('--vq');p.add_argument('--out',required=True);p.add_argument('--confirm-manifest');p.add_argument('--confirm-archive');p.add_argument('--archive-sha256');p.add_argument('--train-manifest');p.add_argument('--training-config');p.add_argument('--approval');p.add_argument('--limit',type=int,default=0);p.add_argument('--expected-checkpoint-sha256');p.add_argument('--expected-train-sha256');args=p.parse_args()
  globals()[args.action](args)
