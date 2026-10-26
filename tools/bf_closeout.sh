@@ -15,6 +15,10 @@ case "$1" in
     python -u tools/bf_confirm_native.py prepare --out "$out" --confirm-archive /share/home/u2515283058/Mymodel/output_eval/m12_gain_independent_confirm_20261020/m12_gain_confirm_review.tar.gz --archive-sha256 1bcd6c0ef4e4ad2291c560b9258a7162b0ea50a769d36a6c60544b19ba52e3bb
     python -u tools/bf_confirm_native.py audit --repo "$repo" --source-repo "$source_repo" --ckpt "$checkpoint" --vq "$vq" --out "$out" --confirm-manifest "$out/BF_confirm_manifest.json" --train-manifest /share/home/u2515283058/Mymodel/data/train_bf_texture.json --training-config "$source_repo/logs/2026-07-01T22-38-33_mydata_ldm-vq-f8/configs/2026-07-01T22-38-33-project.yaml"
     ;;
+  evaluate)
+    conda activate Mymodel
+    python -u tools/bf_common_eval.py
+    ;;
   smoke|generate)
     extra=()
     if [ "$1" = smoke ]; then extra=(--limit 3); fi
