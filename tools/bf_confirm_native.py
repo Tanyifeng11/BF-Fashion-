@@ -121,7 +121,7 @@ def generate(args):
     native_size=[256,256],evaluation_size=[384,512],seconds_native_inference=seconds,peak_allocated_GiB=torch.cuda.max_memory_allocated()/2**30,gpu=torch.cuda.get_device_name(),
     timing_scope='conditioning preparation excluded; sampler and VQ decode included; PNG/resize excluded',scientific_training_updates=0,EMA_context=False)
   return im,meta
- with torch.inference_mode():
+ with torch.no_grad():
   for row in rows:
    for seed in [42,43,44]:
     native=out/'native_png'/row['id']/f'seed{seed}.png';dest=out/'outputs/BF-Fashion'/row['id']/f'seed{seed}.png';meta=dest.with_suffix('.json')
@@ -131,7 +131,7 @@ def generate(args):
      assert old['sketch_rgb_sha256']==row['sketch_rgb_sha256'] and old['reference_rgb_sha256']==row['reference_rgb_sha256']
      counts.append(dict(id=row['id'],seed=seed,reused=True));continue
     image,details=run(row,seed);native.parent.mkdir(parents=True,exist_ok=True);dest.parent.mkdir(parents=True,exist_ok=True)
-    image.save(native);image.resize((384,512),Image.Resampling.BILINEAR).save(dest)
+    image.save(native);image.resize((384,512),Image.BILINEAR).save(dest)
     details.update(native_png_sha256=sha(native),png_sha256=sha(dest),success=True);write(meta,details);counts.append(dict(id=row['id'],seed=seed,reused=False))
     print('BF_OUTPUT',row['id'],seed,len(counts),flush=True)
     if args.limit and len(counts)>=args.limit:
