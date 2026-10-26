@@ -91,7 +91,8 @@ def generate(args):
  runtime=out/'native_runtime_artifacts';runtime.mkdir(exist_ok=True);os.chdir(runtime)
  torch.backends.cudnn.benchmark=False
  def tensor(im):
-  value=np.asarray(im).astype('float32')/127.5-1
+  # 与原dataset完全一致：uint8先除127.5，再转float32。
+  value=(np.asarray(im).astype('uint8')/127.5-1.0).astype('float32')
   if value.ndim==2:value=value[:,:,None]
   return torch.from_numpy(value.transpose(2,0,1)[None]).cuda()
  def run(row,seed):
