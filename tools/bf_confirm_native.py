@@ -83,7 +83,8 @@ def generate(args):
  config.model.params.first_stage_config.params.ckpt_path=str(Path(args.vq).resolve())
  model=instantiate_from_config(config.model);weights=torch.load(args.ckpt,map_location='cpu')
  missing,unexpected=model.load_state_dict(weights['state_dict'],strict=False)
- write(out/'BF_loading.json',dict(missing_keys=list(missing),unexpected_keys=list(unexpected),dtype='nativefloat32',EMA_context=False,model_parameters=sum(p.numel() for p in model.parameters())))
+ loading=dict(missing_keys=list(missing),unexpected_keys=list(unexpected),dtype='nativefloat32',EMA_context=False,model_parameters=sum(p.numel() for p in model.parameters()))
+ write(out/('BF_loading_'+os.environ.get('SLURM_JOB_ID','local')+'.json'),loading);write(out/'BF_loading.json',loading)
  assert not any(k.startswith(('model.diffusion_model.','cond_stage_model.','first_stage_model.')) for k in missing),'关键推理权重缺失，停止'
  del weights
  model.cuda().eval().requires_grad_(False);sampler=DDIMSampler(model);counts=[]
@@ -124,8 +125,8 @@ def generate(args):
   for row in rows:
    for seed in [42,43,44]:
     native=out/'native_png'/row['id']/f'seed{seed}.png';dest=out/'outputs/BF-Fashion'/row['id']/f'seed{seed}.png';meta=dest.with_suffix('.json')
-    if dest.exists() or meta.exists():
-     assert dest.exists() and meta.exists(),'部分产物需先审计，不自动覆盖'
+    if native.exists() or dest.exists() or meta.exists():
+     assert native.exists() and dest.exists() and meta.exists(),'部分产物需先审计，不自动覆盖'
      old=read(meta);assert old['id']==row['id'] and old['seed']==seed and old['checkpoint_sha256']==auditinfo['checkpoint_sha256'] and old['png_sha256']==sha(dest) and old['native_png_sha256']==sha(native)
      assert old['sketch_rgb_sha256']==row['sketch_rgb_sha256'] and old['reference_rgb_sha256']==row['reference_rgb_sha256']
      counts.append(dict(id=row['id'],seed=seed,reused=True));continue
